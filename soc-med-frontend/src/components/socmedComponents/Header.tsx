@@ -15,7 +15,7 @@ const Header = ({ onSearchClick, onNotificationClick }: HeaderProps) => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/")
-  }
+  } 
 
   const menuItems = [
     { icon: User, label: "View Profile", action: () => console.log("Profile") },
