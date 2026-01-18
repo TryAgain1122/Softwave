@@ -293,7 +293,7 @@ const Socmed = () => {
             <MessagesModal />
           </div>
         ) : (
-          <main className="max-w-2xl mx-auto px-4 py-6 pb-24 relative">
+          <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-24 relative">
             {/* Pull to Refresh Indicator */}
             {isRefreshing && (
               <div className="flex justify-center py-4">
