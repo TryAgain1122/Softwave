@@ -29,9 +29,11 @@ const LoginForm = ({ onSwitchToRegister }: LoginFormProps) => {
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); 
 
   const handleSubmit = async () => {
     try {
+      setIsLoading(true);
       const response = await axios.post(`
           ${import.meta.env.VITE_API_URL}/auth/login
         `, {
@@ -47,6 +49,8 @@ const LoginForm = ({ onSwitchToRegister }: LoginFormProps) => {
         navigate("/socmed");
     } catch (error) {
       alert('Login failed');
+    } finally {
+      setIsLoading(false);
     }
     // console.log("Login Submitred", formData);
     // alert("Login submitted! Check console for details.");
@@ -93,7 +97,7 @@ const LoginForm = ({ onSwitchToRegister }: LoginFormProps) => {
           </label>
         </div>
 
-        <SubmitButton text="Sign In" onClick={handleSubmit} />
+        <SubmitButton text="Sign In" onClick={handleSubmit} loading={isLoading} />
 
         <Divider />
 
