@@ -4,6 +4,7 @@ import InputField from "./InputField";
 import SubmitButton from "./SubmitButton";
 import Divider from "./Divider";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 interface FormData {
   email: string;
@@ -22,6 +23,7 @@ interface LoginFormProps {
 }
 
 const LoginForm = ({ onSwitchToRegister }: LoginFormProps) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
@@ -42,7 +44,7 @@ const LoginForm = ({ onSwitchToRegister }: LoginFormProps) => {
 
         localStorage.setItem("token", token);
 
-        alert("Login successfuil")
+        navigate("/socmed");
     } catch (error) {
       alert('Login failed');
     }

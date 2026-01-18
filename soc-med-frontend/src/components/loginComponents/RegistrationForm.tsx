@@ -42,7 +42,7 @@ const RegistrationForm = ({onSwitchToLogin}:RegistrationFormProps) => {
 
   const handleSubmit = async () => {
 
-    if (formData.firstName === '' || formData.lastName === '' || formData.dateOfBirth === '' || formData.gender === '' || formData.mobileNumber === '' || formData.emailAddress === '' || formData.password || formData.confirmPassword === '') {
+    if (formData.firstName === '' || formData.lastName === '' || formData.dateOfBirth === '' || formData.gender === '' || formData.mobileNumber === '' || formData.emailAddress === '' || formData.password === '' || formData.confirmPassword === '') {
       alert('Please fill all fields');
       return;
     }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Header from "../components/socmedComponents/Header";
 import SearchModal from "../components/socmedComponents/Modals/SearchModal";
 import NotificationModal from "../components/socmedComponents/Modals/NotificationModal";
@@ -7,10 +7,13 @@ import Stories from "../components/socmedComponents/Stories";
 import PostCard from "../components/socmedComponents/PostCard";
 import ProfilePage from "../components/socmedComponents/ProfilePage";
 import CommentModal from "../components/socmedComponents/Modals/CommentModal";
-import Chat from "./Chat";
 import MessagesModal from "../components/socmedComponents/Modals/MessagesModal";
+import CreatePostModal from "../components/socmedComponents/Modals/CreatePostModal";
+import ShareModal from "../components/socmedComponents/Modals/ShareModal";
+import SuggestedUsers from "../components/socmedComponents/SuggestedUsers";
+import { Plus } from "lucide-react";
 
-interface Notification {
+interface INotification {
   id: number;
   user: string;
   avatar: string;
@@ -19,7 +22,7 @@ interface Notification {
   read: boolean;
 }
 
-interface Comment {
+interface IComment {
   id: number;
   user: {
     name: string;
@@ -31,7 +34,7 @@ interface Comment {
   likes: number;
 }
 
-interface Post {
+interface IPost {
   id: number;
   user: {
     name: string;
@@ -40,20 +43,22 @@ interface Post {
   };
   content: string;
   image?: string;
+  images?: string[];
   likes: number;
   comments: number;
   isLiked: boolean;
   isBookmarked: boolean;
   timestamp: string;
-  commentsList: Comment[];
+  commentsList: IComment[];
 }
+
 const Socmed = () => {
-  const [posts, setPosts] = useState<Post[]>([
+  const [posts, setPosts] = useState<IPost[]>([
     {
       id: 1,
       user: { name: "Luna Rose", username: "@lunarose", avatar: "🌸" },
       content:
-        "Spending my morning in the garden with a cup of lavender tea ☕️✨",
+        "Spending my morning in the garden with a cup of lavender tea 🍵 ✨",
       image:
         "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=600&h=400&fit=crop",
       likes: 342,
@@ -83,8 +88,11 @@ const Socmed = () => {
       user: { name: "Mia Belle", username: "@miabelle", avatar: "🦋" },
       content:
         "New art piece finished! Watercolor skies and dreamy clouds 🎨💭",
-      image:
+      images: [
         "https://images.unsplash.com/photo-1579762715118-a6f1d4b934f1?w=600&h=400&fit=crop",
+        "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=600&h=400&fit=crop",
+        "https://images.unsplash.com/photo-1549289524-06cf8837ace5?w=600&h=400&fit=crop",
+      ],
       likes: 521,
       comments: 45,
       isLiked: true,
@@ -137,7 +145,7 @@ const Socmed = () => {
     },
   ]);
 
-  const [notifications] = useState<Notification[]>([
+  const [notifications] = useState<INotification[]>([
     {
       id: 1,
       user: "Luna Rose",
@@ -171,11 +179,16 @@ const Socmed = () => {
       read: true,
     },
   ]);
+
   const [activeTab, setActiveTab] = useState("home");
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [selectedPost, setSelectedPost] = useState<IPost | null>(null);
   const [showComments, setShowComments] = useState(false);
+  const [showCreatePost, setShowCreatePost] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [sharePostId, setSharePostId] = useState<number | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleLike = (id: number) => {
     setPosts(
@@ -200,39 +213,72 @@ const Socmed = () => {
   };
 
   const handleCommentClick = (id: number) => {
-    console.log("handle comment click called with id: ", id)
-    const post = posts.find(p => p.id === id);
+    const post = posts.find((p) => p.id === id);
     if (post) {
       setSelectedPost(post);
       setShowComments(true);
-      console.log("selectedPost:", selectedPost);
-console.log("showComments:", showComments);
     }
-  }
+  };
 
   const handleAddComment = (postId: number, content: string) => {
-    setPosts(posts.map(post => {
-      if (post.id === postId) {
-        const newComment: Comment = {
-          id: post.commentsList.length + 1,
-          user: { name: 'You', username: '@you', avatar: '💫'},
-          content,
-          timestamp: 'Just now',
-          likes: 0
-        };
-        return {
-          ...post,
-          commentsList: [...post.commentsList, newComment],
-          comments: post.comments + 1
+    setPosts(
+      posts.map((post) => {
+        if (post.id === postId) {
+          const newComment: IComment = {
+            id: post.commentsList.length + 1,
+            user: { name: "You", username: "@you", avatar: "💫" },
+            content,
+            timestamp: "Just now",
+            likes: 0,
+          };
+          return {
+            ...post,
+            commentsList: [...post.commentsList, newComment],
+            comments: post.comments + 1,
+          };
         }
-      }
-      return post;
-    }))
-  }
+        return post;
+      })
+    );
+  };
+
+  const handleCreatePost = (content: string, image?: string) => {
+    const newPost: IPost = {
+      id: posts.length + 1,
+      user: { name: "You", username: "@you", avatar: "💫" },
+      content,
+      image,
+      likes: 0,
+      comments: 0,
+      isLiked: false,
+      isBookmarked: false,
+      timestamp: "Just now",
+      commentsList: [],
+    };
+    setPosts([newPost, ...posts]);
+  };
+
+  const handleShare = (id: number) => {
+    setSharePostId(id);
+    setShowShare(true);
+  };
+
+  const handleFollow = (id: number) => {
+    console.log("Follow user from post:", id);
+  };
+
+  // Pull to refresh functionality
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setIsRefreshing(false);
+  }, []);
+
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 overflow-x-hidden">
-        {/*Decorative background elements */}
+        {/* Decorative background elements */}
         <div className="fixed top-0 left-0 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob pointer-events-none"></div>
         <div className="fixed top-0 right-0 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000 pointer-events-none"></div>
         <div className="fixed bottom-0 left-1/2 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000 pointer-events-none"></div>
@@ -242,57 +288,107 @@ console.log("showComments:", showComments);
           onSearchClick={() => setShowSearch(true)}
         />
 
-        <main className="max-w-2xl mx-auto px-4 py-6 pb-24 relative">
-          {activeTab === "home" ? (
-            <>
-              <Stories />
-              <div className="space-y-6">
-                {posts.map((post, index) => (
-                  <PostCard
-                    key={post.id}
-                    post={post}
-                    index={index}
-                    onLike={handleLike}
-                    onBookmark={handleBookmark}
-                    onCommentClick={handleCommentClick}
-                  />
-                ))}
+        {activeTab === "messages" ? (
+          <div className="fixed inset-0 top-16 bottom-16 z-10">
+            <MessagesModal />
+          </div>
+        ) : (
+          <main className="max-w-2xl mx-auto px-4 py-6 pb-24 relative">
+            {/* Pull to Refresh Indicator */}
+            {isRefreshing && (
+              <div className="flex justify-center py-4">
+                <div className="w-8 h-8 border-4 border-purple-200 border-t-purple-500 rounded-full animate-spin"></div>
               </div>
-            </>
-          ) : activeTab === 'profile' ? (
-            <ProfilePage 
+            )}
+
+            {activeTab === "home" ? (
+              <>
+                <Stories onAddStory={() => setShowCreatePost(true)} />
+
+                {/* Suggested Users */}
+                <SuggestedUsers />
+
+                {/* Posts Feed */}
+                <div className="space-y-6">
+                  {posts.map((post, index) => (
+                    <PostCard
+                      key={post.id}
+                      post={post}
+                      index={index}
+                      onLike={handleLike}
+                      onBookmark={handleBookmark}
+                      onCommentClick={handleCommentClick}
+                      onShare={handleShare}
+                      onFollow={handleFollow}
+                    />
+                  ))}
+                </div>
+
+                {/* Load More Indicator */}
+                <div className="flex justify-center py-8">
+                  <button
+                    onClick={handleRefresh}
+                    className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-medium hover:shadow-lg transition-all hover:scale-105"
+                  >
+                    Load more posts
+                  </button>
+                </div>
+              </>
+            ) : activeTab === "profile" ? (
+              <ProfilePage
                 posts={posts}
                 onLike={handleLike}
                 onBookmark={handleBookmark}
                 onCommentClick={handleCommentClick}
               />
-          ) : activeTab === 'messages' ? (
-            <Chat />
-          ) : (
-            <></>
-          )}
+            ) : (
+              <></>
+            )}
 
-          <SearchModal
-            isOpen={showSearch}
-            onClose={() => setShowSearch(false)}
-          />
-          <NotificationModal
-            notifications={notifications}
-            isOpen={showNotifications}
-            onClose={() => setShowNotifications(false)}
-          />
+            <SearchModal
+              isOpen={showSearch}
+              onClose={() => setShowSearch(false)}
+            />
+            <NotificationModal
+              notifications={notifications}
+              isOpen={showNotifications}
+              onClose={() => setShowNotifications(false)}
+            />
 
-          <CommentModal 
-            isOpen={showComments}
-            onClose={() => setShowComments(false)}
-            posts={selectedPost}
-            onAddComment={handleAddComment}
-          />
+            <CommentModal
+              isOpen={showComments}
+              onClose={() => setShowComments(false)}
+              posts={selectedPost}
+              onAddComment={handleAddComment}
+            />
+          </main>
+        )}
 
-          <MessagesModal />
+        {/* Floating Action Button - Create Post */}
+        {activeTab === "home" && (
+          <button
+            onClick={() => setShowCreatePost(true)}
+            className="fixed bottom-24 right-6 w-14 h-14 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl hover:scale-110 transition-all duration-300 z-20"
+          >
+            <Plus className="w-7 h-7" />
+          </button>
+        )}
 
-          <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
-        </main>
+        {/* Create Post Modal */}
+        <CreatePostModal
+          isOpen={showCreatePost}
+          onClose={() => setShowCreatePost(false)}
+          onPost={handleCreatePost}
+        />
+
+        {/* Share Modal */}
+        <ShareModal
+          isOpen={showShare}
+          onClose={() => setShowShare(false)}
+          postId={sharePostId || 0}
+        />
+
+        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
     </>
   );

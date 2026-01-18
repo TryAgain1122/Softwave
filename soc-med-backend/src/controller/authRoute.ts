@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { pool } from "../config/dbConnect";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+
 export async function registerUser(req: Request, res: Response): Promise<void> {
   const {
     firstName,
@@ -15,6 +16,7 @@ export async function registerUser(req: Request, res: Response): Promise<void> {
 
   if (!firstName || !lastName || !email || !password) {
     res.status(400).json({ message: "Missing required fields" });
+    return;
   }
 
   try {
@@ -24,6 +26,7 @@ export async function registerUser(req: Request, res: Response): Promise<void> {
 
     if (exists.rows.length > 0) {
       res.status(400).json({ message: "Email already registered" });
+      return;
     }
 
     //Hashed Password
@@ -45,10 +48,11 @@ export async function registerUser(req: Request, res: Response): Promise<void> {
     );
 
     res.status(201).json({
-      message: "User registed successfully",
+      message: "User registered successfully",
     });
   } catch (error) {
     console.error("Registration error", error);
+    res.status(500).json({ message: "Server error" });
   }
 }
 
@@ -63,6 +67,7 @@ export async function loginUser(req: Request, res: Response): Promise<void> {
 
     if (userResult.rows.length === 0) {
       res.status(400).json({ message: "Invalid email or password" });
+      return;
     }
 
     const user = userResult.rows[0];
@@ -71,6 +76,7 @@ export async function loginUser(req: Request, res: Response): Promise<void> {
 
     if (!validPassword) {
       res.status(400).json({ message: "Invalid email or password" });
+      return;
     }
 
     const token = jwt.sign(
@@ -90,6 +96,7 @@ export async function loginUser(req: Request, res: Response): Promise<void> {
       },
     });
   } catch (err) {
+    console.error("Login error", err);
     res.status(500).json({ message: "Server error" });
   }
 }

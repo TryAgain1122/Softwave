@@ -2,7 +2,19 @@ import { useState } from "react";
 import PostCard from "./PostCard";
 import { Bookmark } from "lucide-react";
 
-interface Post {
+interface IComment {
+  id: number;
+  user: {
+    name: string;
+    username: string;
+    avatar: string;
+  };
+  content: string;
+  timestamp: string;
+  likes: number;
+}
+
+interface IPost {
   id: number;
   user: {
     name: string;
@@ -16,11 +28,12 @@ interface Post {
   isLiked: boolean;
   isBookmarked: boolean;
   timestamp: string;
-  commentsList: Comment[];
+  commentsList: IComment[];
 }
 
+
 interface ProfilePageProps {
-  posts: Post[];
+  posts: IPost[];
   onLike: (id: number) => void;
   onBookmark: (id: number) => void;
   onCommentClick: (id: number) => void;
