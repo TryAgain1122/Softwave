@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Bell, Search, Settings, User, LogOut, Moon, HelpCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   onSearchClick: () => void;
@@ -7,15 +8,23 @@ interface HeaderProps {
 }
 
 const Header = ({ onSearchClick, onNotificationClick }: HeaderProps) => {
+  const navigate = useNavigate();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/")
+  }
 
   const menuItems = [
     { icon: User, label: "View Profile", action: () => console.log("Profile") },
     { icon: Settings, label: "Settings", action: () => console.log("Settings") },
     { icon: Moon, label: "Dark Mode", action: () => console.log("Dark Mode"), toggle: true },
     { icon: HelpCircle, label: "Help & Support", action: () => console.log("Help") },
-    { icon: LogOut, label: "Log Out", action: () => console.log("Logout"), danger: true },
+    { icon: LogOut, label: "Log Out", action: handleLogout, danger: true },
   ];
+
 
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-gray-100 shadow-sm">
